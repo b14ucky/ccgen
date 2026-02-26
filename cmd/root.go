@@ -16,10 +16,14 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
+
+var cfgFile string
 
 var rootCmd = &cobra.Command{
 	Use:   "ccgen",
@@ -27,6 +31,8 @@ var rootCmd = &cobra.Command{
 	Long: `ccgen is a lightweight CLI tool that leverages AI to automatically generate
 Conventional Commit messages and pull requests descriptions from your git diffs`,
 	Run: func(cmd *cobra.Command, args []string) {
+		apiKey := viper.GetString("api_key")
+		fmt.Println("Using API key:", apiKey)
 		if len(args) == 0 {
 			cmd.Help()
 		}
@@ -36,10 +42,35 @@ Conventional Commit messages and pull requests descriptions from your git diffs`
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
 func init() {
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ccgen.yaml)")
+	cobra.OnInitialize(initConfig)
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ccgen.yaml)")
+}
+
+func initConfig() {
+	if cfgFile != "" {
+		viper.SetConfigFile(cfgFile)
+	} else {
+		home, err := os.UserHomeDir()
+		cobra.CheckErr(err)
+
+		viper.AddConfigPath(home)
+		viper.SetConfigType("yaml")
+		viper.SetConfigName(".ccgen")
+	}
+
+	viper.AutomaticEnv()
+
+	fmt.Println(viper.ConfigFileUsed())
+
+	if err := viper.ReadInConfig(); err == nil {
+		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	} else {
+		fmt.Fprintln(os.Stderr, "No config file found:", err)
+	}
 }
