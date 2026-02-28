@@ -54,7 +54,10 @@ Examples:
 		if err != nil {
 			return err
 		}
-		result, _ := aiService.GetCommitMessage(diff, giveDescription)
+		result, err := aiService.GetCommitMessage(diff, giveDescription)
+		if err != nil {
+			return err
+		}
 		fmt.Println(result)
 		return nil
 	},
