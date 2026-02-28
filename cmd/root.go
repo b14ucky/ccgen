@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"ccgen/ai"
 	"fmt"
 	"os"
 
@@ -24,6 +25,7 @@ import (
 )
 
 var cfgFile string
+var aiService *ai.Service
 
 var rootCmd = &cobra.Command{
 	Use:   "ccgen",
@@ -40,6 +42,7 @@ Conventional Commit messages and pull requests descriptions from your git diffs`
 }
 
 func Execute() {
+	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 	err := rootCmd.Execute()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -49,6 +52,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(initAiConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ccgen.yaml)")
 }
 
@@ -68,9 +72,22 @@ func initConfig() {
 
 	fmt.Println(viper.ConfigFileUsed())
 
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	} else {
+	if err := viper.ReadInConfig(); err != nil {
 		fmt.Fprintln(os.Stderr, "No config file found:", err)
+		os.Exit(1)
 	}
+	fmt.Println("Using config file:", viper.ConfigFileUsed())
+
+}
+
+func initAiConfig() {
+	service, err := ai.New(
+		viper.GetString("api_key"),
+		viper.GetString("model"),
+	)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error with GeminiAPI:", err)
+	}
+
+	aiService = service
 }
