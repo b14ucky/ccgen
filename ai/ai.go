@@ -43,6 +43,14 @@ func New(apiKey string, model string) (*Service, error) {
 	}, nil
 }
 
+func (s *Service) Model() string {
+	return s.model
+}
+
+func (s *Service) ApiKey() string {
+	return s.client.ClientConfig().APIKey
+}
+
 func (s *Service) GetCommitMessage(diff string, giveDescription bool) (result string, e error) {
 	ctx := context.Background()
 

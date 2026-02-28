@@ -26,6 +26,7 @@ import (
 
 var cfgFile string
 var aiService *ai.Service
+var verbose bool
 
 var rootCmd = &cobra.Command{
 	Use:   "ccgen",
@@ -33,8 +34,6 @@ var rootCmd = &cobra.Command{
 	Long: `ccgen is a lightweight CLI tool that leverages AI to automatically generate
 Conventional Commit messages and pull requests descriptions from your git diffs`,
 	Run: func(cmd *cobra.Command, args []string) {
-		apiKey := viper.GetString("api_key")
-		fmt.Println("Using API key:", apiKey)
 		if len(args) == 0 {
 			cmd.Help()
 		}
@@ -54,6 +53,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	cobra.OnInitialize(initAiConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ccgen.yaml)")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose output")
 }
 
 func initConfig() {
@@ -76,7 +76,9 @@ func initConfig() {
 		fmt.Fprintln(os.Stderr, "No config file found:", err)
 		os.Exit(1)
 	}
-	fmt.Println("Using config file:", viper.ConfigFileUsed())
+	if verbose {
+		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	}
 
 }
 
@@ -87,6 +89,11 @@ func initAiConfig() {
 	)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error with GeminiAPI:", err)
+	}
+
+	if verbose {
+		fmt.Println("Using model:", service.Model())
+		fmt.Println("Using API key:", service.ApiKey())
 	}
 
 	aiService = service
