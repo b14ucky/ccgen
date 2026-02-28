@@ -56,7 +56,16 @@ func (s *Service) GetCommitMessage(diff string, giveDescription bool) (result st
 
 	var prompt string
 	if giveDescription {
-		prompt = "Generate git conventional commit title and description based on the provided diff: " + diff
+		prompt = `Generate git conventional commit title and description based on the provided diff.
+The commit message should be structured as follows:
+<type>[optional scope]: <title>
+
+<description body>
+
+[optional footer (s)]
+
+Do not use markdown to structure your output!
+` + diff
 	} else {
 		prompt = "Generate git conventional commit title (!no description!) based on the provided diff: " + diff
 	}
